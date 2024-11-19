@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    volumes:
+      - ./backend:/app/backend
+      - ./certs:/app/certs
+      - ./.env:/app/.env
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - PYTHONPATH=/app/backend
+      - PYTHONUNBUFFERED=1
+    networks:
+      - sympera_network
+    restart: unless-stopped
+    command: sh -c "pip install -e . && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+      - ./.env:/app/.env
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    networks:
+      - sympera_network
+    restart: unless-stopped
+
+networks:
+  sympera_network:
+    driver: bridge
+
+volumes:
+  backend_data:
+  frontend_data:
+  certs_data:
