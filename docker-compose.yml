@@ -1,5 +1,5 @@
-version: '3.8'
-
+---
+version: "3.8"
 services:
   backend:
     build:
@@ -10,7 +10,7 @@ services:
       - ./certs:/app/certs
       - ./.env:/app/.env
     ports:
-      - "8000:8000"
+      - 8000:8000
     environment:
       - APP_ENV=development
       - PYTHONPATH=/app/backend
@@ -18,8 +18,8 @@ services:
     networks:
       - sympera_network
     restart: unless-stopped
-    command: sh -c "pip install -e . && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
-
+    command: sh -c "pip install -e . && uvicorn app.main:app --host 0.0.0.0 --port
+      8000 --reload"
   frontend:
     build:
       context: .
@@ -29,7 +29,7 @@ services:
       - /app/frontend/node_modules
       - ./.env:/app/.env
     ports:
-      - "3000:3000"
+      - 3000:3000
     environment:
       - NODE_ENV=development
     depends_on:
@@ -37,12 +37,36 @@ services:
     networks:
       - sympera_network
     restart: unless-stopped
-
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongodb_data:/data/db
+      - ./init/mongodb:/docker-entrypoint-initdb.d
+      - ./data/mongodb:/import_data
+    ports:
+      - 27017:27017
+    networks:
+      - sympera_network
+    restart: always
+  postgres:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init/postgres:/docker-entrypoint-initdb.d
+      - ./data/postgres:/import_data
+    environment:
+      POSTGRES_USER: ${SQL_DB_USER}
+      POSTGRES_PASSWORD: ${SQL_DB_PASS}
+      POSTGRES_DB: ${SQL_USER_CENTRAL_DB_NAME}
+    ports:
+      - 5431:5432
+    networks:
+      - sympera_network
+    restart: always
 networks:
   sympera_network:
     driver: bridge
-
 volumes:
-  backend_data:
-  frontend_data:
-  certs_data:
+  backend_data: null
+  frontend_data: null
+  certs_data: null
