@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    image: backend  
     volumes:
       - ./backend:/app/backend
       - ./certs:/app/certs
@@ -24,6 +25,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    image: frontend  
     volumes:
       - ./frontend:/app/frontend
       - /app/frontend/node_modules
@@ -69,4 +71,6 @@ networks:
 volumes:
   backend_data: null
   frontend_data: null
+  mongodb_data: null
+  postgres_data: null
   certs_data: null
