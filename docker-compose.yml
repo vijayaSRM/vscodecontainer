@@ -1,44 +1,6 @@
----
-version: "3.8"
+version: '3.8'
+
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    image: backend  
-    volumes:
-      - ./backend:/app/backend
-      - ./certs:/app/certs
-      - ./.env:/app/.env
-    ports:
-      - 8000:8000
-    environment:
-      - APP_ENV=development
-      - PYTHONPATH=/app/backend
-      - PYTHONUNBUFFERED=1
-    networks:
-      - sympera_network
-    restart: unless-stopped
-    command: sh -c "pip install -e . && uvicorn app.main:app --host 0.0.0.0 --port
-      8000 --reload"
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-    image: frontend  
-    volumes:
-      - ./frontend:/app/frontend
-      - /app/frontend/node_modules
-      - ./.env:/app/.env
-    ports:
-      - 3000:3000
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - backend
-    networks:
-      - sympera_network
-    restart: unless-stopped
   mongodb:
     image: mongo:latest
     volumes:
@@ -46,31 +8,60 @@ services:
       - ./init/mongodb:/docker-entrypoint-initdb.d
       - ./data/mongodb:/import_data
     ports:
-      - 27017:27017
+      - "27017:27017"
     networks:
       - sympera_network
     restart: always
+  
   postgres:
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init/postgres:/docker-entrypoint-initdb.d
-      - ./data/postgres:/import_data
+      - ./init/postgres:/docker-entrypoint-initdb.d   # תיקיית אתחול
+      - ./data/postgres:/import_data 
     environment:
-      POSTGRES_USER: ${SQL_DB_USER}
-      POSTGRES_PASSWORD: ${SQL_DB_PASS}
-      POSTGRES_DB: ${SQL_USER_CENTRAL_DB_NAME}
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Rayaru1234
+      POSTGRES_DB: postgres
     ports:
-      - 5431:5432
+      - "5431:5432"
     networks:
       - sympera_network
     restart: always
+
+  sympera:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: symper_services  
+    working_dir: /app
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./certs:/app/certs
+      - ./.env:/app/.env
+      - /app/frontend/node_modules
+    ports:
+      - "8000:8000"
+      - "3000:3000"
+    environment:
+      - APP_ENV=development
+      - PYTHONPATH=/app/backend
+      - PYTHONUNBUFFERED=1
+      - NODE_ENV=development
+    networks:
+      - sympera_network
+    restart: unless-stopped
+    #command: sh -c "/app/start.sh"
+
 networks:
   sympera_network:
     driver: bridge
+
 volumes:
-  backend_data: null
-  frontend_data: null
-  mongodb_data: null
-  postgres_data: null
-  certs_data: null
+  data:
+  mongodb_data:
+  postgres_data:
+  backend:
+  frontend:
+  certs_data:
